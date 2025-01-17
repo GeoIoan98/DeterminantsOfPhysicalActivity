@@ -21,7 +21,7 @@ def remove_single(x):
         return x
 
 
-year = "2918"
+year = "2019"
 month = "dec"
 day = "02"
 df = pd.read_parquet(f"/home/george/data/Veraset/Visits/local_dataset/{year}/{month}/{day}.parquet")
