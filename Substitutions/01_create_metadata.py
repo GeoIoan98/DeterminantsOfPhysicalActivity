@@ -1,3 +1,9 @@
+'''
+Choose three days for which exercisers will be chosen. Choose the non-exercise day to find substitutions.
+Saves the metadata for all subcategories, to be opened in a separate file an analyze.
+'''
+
+
 import pandas as pd
 import os
 import pickle
@@ -6,12 +12,11 @@ import matplotlib.pyplot as plt
 
 year = "2019"
 month = "dec"
-exercise_days = ["03", "04", "05"]
-non_exercise_days = ["06"]
+exercise_days = ["02", "03", "04"]
+non_exercise_days = ["05"]
 base_folder = "/home/george/data/Veraset/Visits/local_dataset"
 
 questioned_sub_categories = ["Full-Service Restaurants", "Limited-Service Restaurants", "Nature Parks and Other Similar Institutions", "Snack and Nonalcoholic Beverage Bars"]
-#questioned_sub_categories = ["Department Stores", "Sporting Goods Stores", "Supermarkets and Other Grocery (except Convenience) Stores", "Convenience Stores"]
 
 exercisers_at_least_1_day  = []
 exercisers_at_least_2_days = []
@@ -62,9 +67,7 @@ group_3_days_total  = []
 df = pd.read_parquet(os.path.join(base_folder, f"{year}/{month}/{exercise_days[0]}.parquet"))
 df = df.dropna(subset=['sub_category']) # remove home and work
 df = df[df["caid"].isin(exercisers_at_least_3_days)]
-### Addition for removing exercise sessions
 df = df[df["sub_category"] != "Fitness and Recreational Sports Centers"]
-###
 group_3_days_total.append(len(df))
 for cat in questioned_sub_categories:
     group_3_days_visits[cat].append(len(df[df["sub_category"] == cat]))
@@ -73,9 +76,7 @@ print("Finished first day")
 # Read 2nd day
 df = pd.read_parquet(os.path.join(base_folder, f"{year}/{month}/{exercise_days[1]}.parquet"))
 df = df.dropna(subset=['sub_category']) # remove home and work
-### Addition for removing exercise sessions
 df = df[df["sub_category"] != "Fitness and Recreational Sports Centers"]
-###
 temp_df = df[df["caid"].isin(exercisers_at_least_3_days)]
 group_3_days_total.append(len(temp_df))
 for cat in questioned_sub_categories:
@@ -89,9 +90,7 @@ print("Finished second day")
 # Read 3rd day
 df = pd.read_parquet(os.path.join(base_folder, f"{year}/{month}/{exercise_days[2]}.parquet"))
 df = df.dropna(subset=['sub_category']) # remove home and work
-### Addition for removing exercise sessions
 df = df[df["sub_category"] != "Fitness and Recreational Sports Centers"]
-###
 temp_df = df[df["caid"].isin(exercisers_at_least_3_days)]
 group_3_days_total.append(len(temp_df))
 for cat in questioned_sub_categories:
@@ -108,9 +107,7 @@ for cat in questioned_sub_categories:
 # Read final day
 df = pd.read_parquet(os.path.join(base_folder, f"{year}/{month}/{non_exercise_days[0]}.parquet"))
 df = df.dropna(subset=['sub_category']) # remove home and work
-### Addition for removing exercise sessions
 df = df[df["sub_category"] != "Fitness and Recreational Sports Centers"]
-###
 temp_df = df[df["caid"].isin(exercisers_at_least_3_days)]
 group_3_days_total.append(len(temp_df))
 for cat in questioned_sub_categories:
@@ -124,17 +121,7 @@ group_1_day_total.append(len(temp_df))
 for cat in questioned_sub_categories:
     group_1_day_visits[cat].append(len(temp_df[temp_df["sub_category"] == cat]))
 
-with open('dec-03-06-final-nonoverlapping.pkl', 'wb') as f:
+# Save metadata to be opened later
+with open('dec-02-05-final-nonoverlapping.pkl', 'wb') as f:
     pickle.dump([group_1_day_visits, group_1_day_total, group_2_days_visits,
                  group_2_days_total, group_3_days_visits, group_3_days_total], f)
-# with open('dec-02-05-final-nonoverlapping.pkl', 'rb') as f:
-#     t1, t2, t3, t4, t5, t6 = pickle.load(f)
-
-# colors = ['r', 'b'] * (len(exercise_days) + len(non_exercise_days))
-#
-# xs = exercise_days + non_exercise_days
-# plt.figure()
-# plt.plot(xs, percentages_1[0::2], color = 'r', label = "visited once")
-# plt.plot(xs, percentages_1[1::2], color = 'b', label = "visited twice")
-# plt.legend()
-# plt.savefig("Full-Service-Restaurants.pdf")

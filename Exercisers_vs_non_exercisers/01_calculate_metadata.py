@@ -1,3 +1,10 @@
+'''
+Chooses the days based on whether someone can be considered an exerciser.
+Chooses the days for which to make the comparison of visits for the two groups.
+Saves metadata for exercisers and non_exercisers, on their visits to different categories for each day.
+Also saves total number of users in each group for each day, to be able to calculate conf. intervals.
+'''
+
 import os
 import pandas as pd
 import pickle
@@ -7,24 +14,21 @@ import statsmodels.api as sm
 def conf_interval(total_true, total_population, a = 0.01, method = 'normal'):
     return sm.stats.proportion_confint(total_true, total_population, a, method)
 
-year = "2020"
-month = "feb"
-days_exercisers = ["03", "04", "05", "06", "07", "08", "09"]
-#days_exercisers = ["07","08", "09", "10", "11", "12", "13"]
+year = "2019"
+month = "dec"
+days_exercisers = ["02", "03", "04", "05", "06", "07", "08"]
 base_folder = "/home/george/data/Veraset/Visits/local_dataset"
 
 determine_exercisers = []
 for day in days_exercisers:
-    #read_exercisers = f"/home/gioann03/code/FitnessProject/metadata/exercisers/{year}/{month}/{day}.pkl"
     read_exercisers = f"/home/george/code/Fitness/metadata/exercisers/{year}/{month}/{day}.pkl"
     with open(read_exercisers, "rb") as f:
         determine_exercisers.extend(pickle.load(f))
-determine_exercisers = set(determine_exercisers) # Ignore number of times exercised
+determine_exercisers = set(determine_exercisers) # At least 1 exercise session considers an exerciser
 
-#days_comparison = ["10", "11", "12", "13", "14"]
-#days_comparison = ["10", "11", "12", "13", "14", "15", "16"]
-days_comparison = ["03", "04", "05", "06", "07", "08", "09"]
+days_comparison = ["02", "03", "04", "05", "06", "07", "08"]
 
+# Categories for which the comparisons were made. Only the most significant were shown in the manuscript.
 categories = ["Full-Service Restaurants", "Pharmacies and Drug Stores", "Snack and Nonalcoholic Beverage Bars",
               "Gasoline Stations with Convenience Stores", "All Other General Merchandise Stores",
               "Nature Parks and Other Similar Institutions", "Department Stores", "Hardware Stores",
@@ -39,7 +43,6 @@ restaurants_non_fit = []
 pharmacies_non_fit = []
 beverage_non_fit = []
 total_non_fit = []
-
 gas_fit = []
 gas_non_fit = []
 merchandise_fit = []
@@ -70,9 +73,7 @@ non_fits = [restaurants_non_fit,pharmacies_non_fit,beverage_non_fit,gas_non_fit,
 for day in days_comparison:
     print(day)
     temp_df = pd.read_parquet(os.path.join(base_folder, f"{year}/{month}/{day}.parquet"))
-
     temp_df = temp_df.dropna(subset=["sub_category"])
-
     active_df = temp_df[temp_df["caid"].isin(determine_exercisers)]
     todays_exercisers = active_df[active_df["sub_category"] == "Fitness and Recreational Sports Centers"]["caid"].unique()
     active_df = active_df[~active_df["caid"].isin(todays_exercisers)]
@@ -84,45 +85,6 @@ for day in days_comparison:
         non_fits[i].append(len(non_active_df[non_active_df["sub_category"] == cat]))
     total_non_fit.append(len(non_active_df))
 
-print(limited_fit)
-
-### Save the results here. Will load them on another file later to process them
-with open('feb-03-09-visits.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+### Save the results here. To be loaded in another file for processing
+with open('feb-03-09-visits.pkl', 'wb') as f:
     pickle.dump([fits, non_fits, total_fit,total_non_fit], f)
-exit()
-
-
-
-conf_active_all = []
-conf_non_active_all = []
-active_results_all = []
-non_active_results_all = []
-
-for i, cat in enumerate(categories):
-    temp = conf_interval(sum(fits[i]), sum(total_fit), 0.01)
-    conf_active_all += [(temp[1]-temp[0])/2]
-    temp = conf_interval(sum(non_fits[i]), sum(total_non_fit), 0.01)
-    conf_non_active_all += [(temp[1]-temp[0])/2]
-    active_results_all += [sum(fits[i])/sum(total_fit)]
-    non_active_results_all += [sum(non_fits[i])/sum(total_non_fit)]
-###
-
-exit()
-
-fig = go.Figure()
-
-fig.add_trace(go.Bar(
-    name='Active Individuals',
-    x=categories, y=active_results_all,
-    error_y=dict(type='data', array=conf_active_all)
-))
-
-fig.add_trace(go.Bar(
-    name='Non-Active Individuals',
-    x=categories, y=non_active_results_all,
-    error_y=dict(type='data', array=conf_non_active_all)
-))
-
-fig.update_layout(barmode='group', yaxis_title = "Percentage of Visits")
-#fig.show()
-fig.write_image("FitVSNonFit_SameWeek.pdf")

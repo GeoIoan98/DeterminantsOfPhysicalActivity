@@ -1,3 +1,8 @@
+'''
+For each subcategory, finds the number of visits before and after visiting a fitness center.
+Saves metadata to be loaded and analyzed in another file.
+'''
+
 import os
 import pandas as pd
 from tqdm import tqdm
@@ -8,17 +13,14 @@ def before_or_after(x, other_sub):
     idx_1 = x.loc[x["sub_category"] == "Fitness and Recreational Sports Centers"].index[0]
     idx_2 = x.loc[x["sub_category"] == other_sub].index[0]
 
-    # idx_1 = x.index[x=="Fitness and Recreational Sports Centers"].tolist()[0]
-    # idx_2 = x.index[x==other_sub].tolist()[0]
-
     if idx_1 < idx_2:
         return "Fitness_First"
     else:
         return "Fitness_Later"
 
-year = "2020"
-month = "jan"
-days_exercisers = ["12"]
+year = "2019"
+month = "dec"
+days_exercisers = ["02"]
 
 base_folder = "/home/george/data/Veraset/Visits/local_dataset"
 
@@ -51,7 +53,7 @@ to_append = [] #["Sub_Category", "Fitness_First", "Fitness_Later"]
 for sub in sub_categories:
     try:
         fit_first = [both[sub]["Fitness_First"]]
-    except:
+    except: # If no covisits with fitness
         fit_first = [0]
     try:
         fit_later = [both[sub]["Fitness_Later"]]
@@ -59,15 +61,6 @@ for sub in sub_categories:
         fit_later = [0]
     to_append.append([sub] + fit_first + fit_later)
 
-with open("2020-jan-12.csv", "w") as f:
+with open("2019-dec-02.csv", "w") as f:
     wr = csv.writer(f)
     wr.writerows(to_append)
-
-# before_after_df = pd.read_csv("2019-dec-09.csv", header=None, names = ["sub_category", "Fitness_First", "Fitness_Later"])
-# before_after_df["Fitness_First_Percentage"] = before_after_df["Fitness_First"] / (before_after_df["Fitness_First"]
-#                                                                                 + before_after_df["Fitness_Later"])
-# before_after_df["Fitness_Later_Percentage"] = before_after_df["Fitness_Later"] / (before_after_df["Fitness_First"]
-#                                                                                 + before_after_df["Fitness_Later"])
-# before_after_df_removed_smaller = before_after_df[before_after_df["Fitness_First"] > 200]
-# print(before_after_df_removed_smaller.sort_values(by = ["Fitness_First_Percentage"], ascending=False)[:10])
-# print(before_after_df_removed_smaller.sort_values(by = ["Fitness_First_Percentage"], ascending=True)[:10])

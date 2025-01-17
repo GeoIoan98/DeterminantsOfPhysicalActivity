@@ -1,3 +1,11 @@
+'''
+Select the day to work on.
+Calculate the total number of co-visits between all pairwise subcategories.
+For example, if a user visited A,B,C on a day, then we add a co-visit for A+B, for B+C, and for A+C.
+Save the metadata, to be loaded and analyzed in a different file.
+'''
+
+
 import pandas as pd
 import os
 from tqdm import tqdm
@@ -13,9 +21,9 @@ def remove_single(x):
         return x
 
 
-year = "2020"
-month = "feb"
-day = "09"
+year = "2918"
+month = "dec"
+day = "02"
 df = pd.read_parquet(f"/home/george/data/Veraset/Visits/local_dataset/{year}/{month}/{day}.parquet")
 print("Finished Reading")
 
