@@ -19,14 +19,6 @@ day = "09"
 df = pd.read_parquet(f"/home/george/data/Veraset/Visits/local_dataset/{year}/{month}/{day}.parquet")
 print("Finished Reading")
 
-### TEST
-# small_df = df[:1000]
-# test_1 = small_df.dropna(subset=['sub_category'])
-# test_1 = test_1.groupby("caid").agg(
-#     created=pd.NamedAgg(column="sub_category", aggfunc=lambda x: set(x)))
-# print(test_1)
-
-### Whole dataset
 co_visits = df.dropna(subset=['sub_category'])
 co_visits = co_visits.groupby("caid").agg(
     created=pd.NamedAgg(column="sub_category", aggfunc=lambda x: set(x)))
